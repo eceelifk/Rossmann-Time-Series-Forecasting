@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rossmann Mağaza Satış Tahmini: Proje Gelişim Raporu</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fcfcfc;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 30px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        p {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+        ul {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        strong {
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .image-container {
+            text-align: center;
+            margin: 30px 0;
+            padding: 15px;
+            background: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        .image-container img {
+            max-width: 90%;
+            height: auto;
+            border-radius: 4px;
+        }
+        .conclusion {
+            background-color: #e8f4f8;
+            padding: 20px;
+            border-left: 5px solid #3498db;
+            margin-top: 40px;
+            font-size: 1.15em;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Rossmann Mağaza Satış Tahmini<br>Proje Gelişim ve Optimizasyon Raporu</h1>
+    
+    <p>Bu doküman, zaman serisi satış tahmini projesinin başlangıç aşamasından nihai teslim aşamasına kadar geçirdiği evrimleri, uygulanan makine öğrenmesi tekniklerini ve bu adımların modelin <strong>R2 skoru</strong> ile <strong>hata payı (MAPE)</strong> üzerindeki kanıtlanmış etkilerini adım adım özetlemektedir.</p>
+
+    <h2>🔴 1. Aşama: Temel (Baseline) Modelin Kurulması</h2>
+    <p>Projenin ilk aşamasında sadece geçmiş satış verileri kullanılarak temel LSTM ve GRU modelleri kuruldu. Test ve Eğitim ayrımı rastgele %80-%20 oranında yapıldı.</p>
+    <ul>
+        <li><strong>Eğitim (Epoch):</strong> 2 Tur.</li>
+        <li><strong>Zaman Penceresi (Sequence Length):</strong> 7 Gün.</li>
+        <li><strong>Durum:</strong> Model, promosyonları ve tatilleri bilmediği için sıradan bir başarı gösterdi. Ayrıca mağazaların kapalı olduğu (Satış=0) Pazar günleri, standart MAPE formülünde <em>Sıfıra Bölme</em> hatası yarattığı için hata payı hesabı bozuldu.</li>
+        <li><strong>R2 Skoru:</strong> ~%64 (0.64)</li>
+        <li><strong>MAPE:</strong> Hesaplanamadı (Hatalı)</li>
+    </ul>
+    <div class="image-container">
+        <img src="media_1787123569946.png" alt="İlk Aşama Sonuçları">
+    </div>
+
+    <h2>🟡 2. Aşama: Öznitelik Mühendisliği ve Overfitting Koruması</h2>
+    <p>Modelin başarı oranını (R2) %70'lerin üzerine taşımak için koda matematiksel müdahaleler ve dış etkenler dahil edildi.</p>
+    <ul>
+        <li><strong>Feature Engineering:</strong> Satışlara doğrudan etki eden <em>Promo (Promosyon)</em>, <em>SchoolHoliday (Okul Tatili)</em> ve <em>DayOfWeek (Haftanın Günü)</em> verileri eklendi (Özellik sayısı 1'den 4'e çıktı).</li>
+        <li><strong>Zaman Penceresi:</strong> Modelin geçmişi daha iyi kavraması için pencere büyüklüğü 7 günden <strong>14 güne</strong> çıkarıldı.</li>
+        <li><strong>Regularization (Aşırı Öğrenme Engeli):</strong> %20 Dropout ve Weight Decay (L2 cezalandırması) uygulandı.</li>
+        <li><strong>Sıfıra Bölme Çözümü:</strong> <code>safe_mape</code> fonksiyonu yazılarak sıfır olan günler formülden maskelendi.</li>
+        <li><strong>Sonuç:</strong> R2 Skoru <strong>~%74.5</strong>, Hata Payı (MAPE) ise <strong>%17.6</strong> civarına geriledi.</li>
+    </ul>
+    <div class="image-container">
+        <img src="media_1787137082879.png" alt="İkinci Aşama Sonuçları">
+    </div>
+
+    <h2>🟠 3. Aşama: Bilimsel Test Doğrulaması (Yıllara Göre Bölme)</h2>
+    <p>Veriyi rastgele yüzdelik (80/20) bölmek yerine, zaman serisi kurallarına sadık kalınarak yıllara göre keskin bir şekilde bölündü.</p>
+    <ul>
+        <li><strong>Yeni Train/Test Ayrımı:</strong> 2013 ve 2014 yıllarının TAMAMI modele öğretildi. Test seti olarak ise modelin hayatında hiç görmediği koskoca <strong>2015 yılı</strong> sunuldu.</li>
+        <li><strong>Eğitim (Epoch):</strong> Bu çok daha zorlu test koşulunu aşabilmesi için eğitim 2'den <strong>5 Epoch'a</strong> yükseltildi.</li>
+        <li><strong>Sonuç:</strong> Model bu çok ağır test koşullarında dahi çökmedi ve R2 başarısını %74.32, MAPE hatasını %17.91 bandında korudu.</li>
+    </ul>
+    <div class="image-container">
+        <img src="media_1787144641078.png" alt="Üçüncü Aşama Sonuçları">
+    </div>
+
+    <h2>🟢 4. Aşama (Final): Veri Zenginleştirmesi (Merge Store.csv)</h2>
+    <p>Projenin nihai teslim aşamasında `store.csv` dosyası modele entegre edilerek mağazaların genetik yapıları makineye öğretildi.</p>
+    <ul>
+        <li><strong>Veri Birleştirme (Merge):</strong> <code>store.csv</code> dosyası, ana veriyle <code>Store</code> ID'si üzerinden birleştirildi.</li>
+        <li><strong>One-Hot Encoding ve Ölçekleme:</strong> Mağaza Tipi (StoreType), Ürün Çeşitliliği (Assortment) gibi kategorik veriler kodlandı. Rakip Mağaza Uzaklığı (CompetitionDistance) modele eklendi.</li>
+        <li><strong>Genişleyen Kapasite:</strong> Modelin incelediği dış etken/kolon sayısı tam <strong>13'e</strong> fırladı (İlk aşamada sadece 1'di).</li>
+    </ul>
+
+    <h3>Sonuç Tablosu (2015 Test Seti)</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Model</th>
+                <th>MSE</th>
+                <th>RMSE</th>
+                <th>MAE</th>
+                <th>MAPE (%)</th>
+                <th>R2 Skoru</th>
+                <th>Eğitim Süresi (sn)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>LSTM</strong></td>
+                <td>2.326.559</td>
+                <td>1525.30</td>
+                <td>1071.87</td>
+                <td><strong>17.68</strong></td>
+                <td><strong>0.7489</strong></td>
+                <td>~114 sn</td>
+            </tr>
+            <tr>
+                <td><strong>GRU</strong></td>
+                <td>2.390.783</td>
+                <td>1546.21</td>
+                <td>1081.49</td>
+                <td><strong>17.51</strong></td>
+                <td><strong>0.7420</strong></td>
+                <td>~118 sn</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="conclusion">
+        <strong>🎯 Nihai Değerlendirme:</strong> Yapılan Epoch artışları, zaman penceresi uzatmaları, Overfit korumaları ve dış veri entegrasyonları sayesinde; modelin veriyi asla ezberlemediği ve test olarak sunulan 2015 yılında <strong>~%75 isabet (0.7489)</strong> ve <strong>~%17.5 hata payı</strong> ile mükemmel bir stabilitede çalıştığı kanıtlanmıştır. Proje başarıyla tamamlanmıştır.
+    </div>
+
+</body>
+</html>
