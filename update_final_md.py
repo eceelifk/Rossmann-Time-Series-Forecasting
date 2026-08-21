@@ -1,6 +1,13 @@
-# Rossmann Mağaza Satış Tahmini: Proje Gelişim ve Optimizasyon Raporu
+from datetime import datetime
+import pytz
 
-**Son Güncelleme Tarihi:** 2026-08-21 15:30:53
+# Şu anki zamanı al
+turkey_tz = pytz.timezone('Europe/Istanbul')
+current_time = datetime.now(turkey_tz).strftime('%Y-%m-%d %H:%M:%S')
+
+report_content = f"""# Rossmann Mağaza Satış Tahmini: Proje Gelişim ve Optimizasyon Raporu
+
+**Son Güncelleme Tarihi:** {current_time}
 **Revizyon (Değişim) Sayısı:** 6. Sürüm (Nihai Revizyon)
 
 Bu doküman, zaman serisi satış tahmini projesinin başlangıç aşamasından nihai teslim aşamasına kadar geçirdiği evrimleri, uygulanan makine öğrenmesi tekniklerini ve bu adımların modelin R2 skoru ile hata payı (MAPE) üzerindeki kanıtlanmış etkilerini adım adım özetlemektedir.
@@ -50,3 +57,9 @@ Projenin nihai sürümünde, ağaç tabanlı XGBoost algoritması 3. model olara
 
 **🎯 Nihai Değerlendirme:** 
 Son güncellemelerle birlikte LSTM modeli R2 skorunu %77.19'a taşımıştır. Ancak asıl şaşırtıcı sonuç, Kaggle şampiyonlarının tercihi olan **XGBoost** modelinin %88.63 gibi kusursuz bir başarıya imza atmasıdır. Grafik incelendiğinde XGBoost'un (Kırmızı Kesik Çizgi) ani tatil satışlarını ve sıfıra düşen günleri nokta atışı yakaladığı görülmektedir. Proje, Makine Öğrenmesi ile Derin Öğrenmenin yeteneklerini kıyaslayan üst düzey bir bitirme tezi kalitesinde tamamlanmıştır.
+"""
+
+with open('Proje_Gelisim_Raporu.md', 'w', encoding='utf-8') as f:
+    f.write(report_content)
+
+print("Proje_Gelisim_Raporu.md updated successfully with the 6th phase and timestamp.")

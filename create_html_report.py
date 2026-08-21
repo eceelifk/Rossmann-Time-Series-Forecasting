@@ -1,11 +1,15 @@
-<!DOCTYPE html>
+from datetime import datetime
+
+current_time = datetime.now().strftime('%d.%m.%Y %H:%M')
+
+html_content = f"""<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rossmann Mağaza Satış Tahmini Proje Gelişim Raporu</title>
     <style>
-        body {
+        body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: #333;
@@ -13,75 +17,68 @@
             margin: 0 auto;
             padding: 40px;
             background-color: #fcfcfc;
-        }
-        h1 {
+        }}
+        h1 {{
             color: #2c3e50;
             text-align: center;
             border-bottom: 2px solid #3498db;
             padding-bottom: 20px;
             margin-bottom: 30px;
-        }
-        h2 {
+        }}
+        h2 {{
             color: #2980b9;
             margin-top: 40px;
             border-left: 5px solid #e74c3c;
             padding-left: 15px;
-        }
-        h3 {
+        }}
+        h3 {{
             color: #16a085;
             margin-top: 20px;
-        }
-        p {
+        }}
+        p {{
             font-size: 16px;
             text-align: justify;
-        }
-        ul {
+        }}
+        ul {{
             font-size: 16px;
             margin-bottom: 20px;
-        }
-        li {
+        }}
+        li {{
             margin-bottom: 8px;
-        }
-        table {
+        }}
+        table {{
             width: 100%;
             border-collapse: collapse;
             margin: 30px 0;
             background-color: white;
             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-        }
-        th, td {
+        }}
+        th, td {{
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #ddd;
-        }
-        th {
+        }}
+        th {{
             background-color: #34495e;
             color: white;
-        }
-        tr:hover {
+        }}
+        tr:hover {{
             background-color: #f5f5f5;
-        }
-        .highlight {
+        }}
+        .highlight {{
             font-weight: bold;
             color: #c0392b;
-        }
-        .success {
+        }}
+        .success {{
             font-weight: bold;
             color: #27ae60;
-        }
-        .meta-info {
+        }}
+        .meta-info {{
             text-align: center;
             font-style: italic;
             color: #7f8c8d;
             margin-bottom: 40px;
-        }
-        .report-img {
-            width: 100%;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin: 20px 0;
-        }
+        }}
     </style>
 </head>
 <body>
@@ -89,7 +86,7 @@
     <h1>Rossmann Mağaza Satış Tahmini<br>Proje Gelişim ve Optimizasyon Raporu</h1>
     
     <div class="meta-info">
-        <p><strong>Güncel Sürüm Tarihi ve Saati:</strong> 21.08.2026 16:04</p>
+        <p><strong>Güncel Sürüm Tarihi ve Saati:</strong> {current_time}</p>
         <p><strong>Değişim/Revizyon Sayısı:</strong> 6. Sürüm (Nihai Kaggle Optimizasyonları)</p>
     </div>
 
@@ -114,9 +111,6 @@
         <li><strong>Sıfıra Bölme Çözümü:</strong> <code>safe_mape</code> fonksiyonu yazılarak sıfır olan günler formülden maskelendi.</li>
         <li><strong>Sonuç:</strong> R2 Skoru ~%74.5, Hata Payı (MAPE) ise %17.6 civarına geriledi.</li>
     </ul>
-    
-    <!-- 2. Aşama Grafiği (Kayıtlı PNG) -->
-    <img src="media_1787137082879.png" alt="2. Aşama Tahmin Grafiği" class="report-img" onerror="this.style.display='none'">
 
     <h2>🟠 3. Aşama: Bilimsel Test Doğrulaması (Yıllara Göre Bölme)</h2>
     <p>Veriyi rastgele yüzdelik (80/20) bölmek yerine, zaman serisi kurallarına sadık kalınarak yıllara göre keskin bir şekilde bölündü.</p>
@@ -134,9 +128,6 @@
         <li><strong>Genişleyen Kapasite:</strong> Modelin incelediği dış etken/kolon sayısı tam 13'e fırladı (İlk aşamada sadece 1'di).</li>
         <li><strong>Dönem Sonu R2 Skoru:</strong> LSTM için %74.89 (0.7489) ölçüldü.</li>
     </ul>
-
-    <!-- 4. Aşama Tablosu (Kayıtlı PNG) -->
-    <img src="media_1787144641078.png" alt="4. Aşama Tablosu" class="report-img" onerror="this.style.display='none'">
 
     <h2>🔵 5. Aşama: Kaggle Optimizasyonları (Rolling Means)</h2>
     <p>Modeli bir üst seviyeye taşımak için veri setine zamansal (temporal) ipuçları eklendi.</p>
@@ -203,9 +194,12 @@
         <p>Son güncellemelerle birlikte LSTM modeli R2 skorunu <strong>%77.19'a</strong> taşımıştır. Ancak asıl şaşırtıcı sonuç, Kaggle şampiyonlarının tercihi olan <strong>XGBoost</strong> modelinin <strong>%88.63</strong> gibi kusursuz bir başarıya imza atmasıdır.</p>
         <p>Nihai tahmin grafiklerinde <strong>XGBoost'un (Kırmızı Kesik Çizgi)</strong> ani tatil satışlarını ve sıfıra düşen kapalı günleri neredeyse sıfır hatayla yakaladığı görülmektedir. Proje, Makine Öğrenmesi (XGBoost) ile Derin Öğrenmenin (LSTM/GRU) yeteneklerini kıyaslayan üst düzey bir çalışma olarak, hedeflenen başarının çok ötesinde tamamlanmıştır.</p>
     </div>
-    
-    <!-- 6. Aşama Son Final Grafiği (Senin yüklediğin son grafik) -->
-    <img src="grafik_final.png" alt="Nihai XGBoost ve LSTM Grafiği" class="report-img" onerror="this.style.display='none'">
 
 </body>
 </html>
+"""
+
+with open('Proje_Gelisim_Raporu.html', 'w', encoding='utf-8') as f:
+    f.write(html_content)
+
+print("Proje_Gelisim_Raporu.html updated successfully with ALL 6 stages.")
