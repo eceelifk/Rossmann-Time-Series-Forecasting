@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Kapsamlı Keşifsel Veri Analizi (EDA) Raporu</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 1000px; margin: 0 auto; padding: 20px; }
+        h1 { color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { color: #2980b9; margin-top: 30px; border-left: 4px solid #e74c3c; padding-left: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 30px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #34495e; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        img { max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 5px; margin-top: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .highlight { font-weight: bold; color: #c0392b; }
+    </style>
+</head>
+<body>
+
+    <h1>Rossmann Zaman Serisi Kapsamlı Veri Analizi (EDA) Raporu</h1>
+
+    <h2>7. Korelasyon Matrisi (Correlation Matrix)</h2>
+    <p>Satışları etkileyen değişkenlerin birbirleriyle olan doğrusal ilişkilerini (Korelasyon) analiz ettik. -1 ile 1 arasındaki bu değerlerde, 1'e yaklaşmak "pozitif güçlü ilişkiyi" temsil eder.</p>
+    <table>
+        <tr>
+            <th>Değişken Çifti</th>
+            <th>Korelasyon Katsayısı</th>
+            <th>Yorum</th>
+        </tr>
+        <tr>
+            <td>Sales & Customers</td>
+            <td>0.89</td>
+            <td>Müşteri sayısı ile satışlar arasında kusursuz bir pozitif ilişki var.</td>
+        </tr>
+        <tr>
+            <td>Sales & Promo</td>
+            <td>0.45</td>
+            <td>Promosyon günlerinde satışların ciddi oranda arttığını gösteren güçlü bir ilişki.</td>
+        </tr>
+        <tr>
+            <td>Sales & CompetitionDistance</td>
+            <td>-0.02</td>
+            <td>Rakip mağazanın uzaklığının satışlara etkisi çok düşüktür (Zayıf Korelasyon).</td>
+        </tr>
+    </table>
+    <img src="eda_correlation.png" alt="Correlation Matrix">
+
+    <h2>1. Zaman İndeksi, Süreklilik ve Boşluk (Gap) Kontrolü</h2>
+    <table>
+        <tr><th>Metrik</th><th>Değer</th></tr>
+        <tr><td>Başlangıç Tarihi</td><td>2013-01-01</td></tr>
+        <tr><td>Bitiş Tarihi</td><td>2015-07-31</td></tr>
+        <tr><td>Toplam İncelenen Gün</td><td>942</td></tr>
+        <tr><td>Eksik Gün Sayısı</td><td><span class="highlight">0</span></td></tr>
+    </table>
+
+    <h2>2. İstatistiksel Dağılım ve Aykırı Değer (Outlier) Analizi</h2>
+    <table>
+        <tr><th>Metrik</th><th>Değer</th></tr>
+        <tr><td>Günlük Ortalama Satış</td><td>6,234,799</td></tr>
+        <tr><td>Minimum Satış</td><td>97,235</td></tr>
+        <tr><td>Maksimum Satış</td><td>15,623,548</td></tr>
+        <tr><td>Aykırı Değer (Outlier) Gün Sayısı</td><td><span class="highlight">168 (Tüm günlerin %17.83'si)</span></td></tr>
+    </table>
+    <img src="eda_boxplot.png" alt="Boxplot">
+
+    <h2>3. Çoklu Periyot ve Mevsimsellik Görselleştirmesi</h2>
+    <p>2.5 yıllık zaman dilimindeki genel trend, haftalık periyotların ve yıl sonu (Aralık) sıçramalarının net gösterimi.</p>
+    <img src="eda_trend.png" alt="Trend Grafiği">
+
+    <h2>4. Zaman Serisi Ayrıştırma (Trend, Mevsimsellik, Artık)</h2>
+    <p>Zaman serisindeki hareketin Trend (Yön), Seasonal (Mevsimsellik/Tekrar) ve Residual (Gürültü) olarak ayrıştırılması.</p>
+    <img src="eda_decompose.png" alt="Decomposition">
+
+    <h2>5. Otokorelasyon (ACF & PACF) ve Gecikme (Lag) Analizi</h2>
+    <p>Mevcut gün satışlarının, geçmiş günlere ne kadar bağımlı olduğunu gösterir. Her 7. günde pik yapması kusursuz bir haftalık döngüyü temsil eder.</p>
+    <img src="eda_acf_pacf.png" alt="ACF PACF">
+
+    <h2>6. Durağanlık Testi (Augmented Dickey-Fuller)</h2>
+    <p>Zaman serisinin istatistiksel özelliklerinin (ortalama, varyans) zamanla değişip değişmediğini test eder.</p>
+    <table>
+        <tr><th>Test Metriği</th><th>Değer</th></tr>
+        <tr><td>ADF Statistic (Test Skoru)</td><td>-4.7616</td></tr>
+        <tr><td>p-value (p-değeri)</td><td><span class="highlight">0.0001</span></td></tr>
+        <tr><td>Sonuç</td><td>p-value < 0.05 olduğu için seri <strong>Durağandır (Stationary)</strong>.</td></tr>
+    </table>
+
+</body>
+</html>

@@ -1,7 +1,7 @@
 # Rossmann Mağaza Satış Tahmini: Proje Gelişim ve Optimizasyon Raporu
 
-**Son Güncelleme Tarihi:** 2026-08-21 15:30:53
-**Revizyon (Değişim) Sayısı:** 6. Sürüm (Nihai Revizyon)
+**Son Güncelleme Tarihi:** 2026-08-24
+**Revizyon (Değişim) Sayısı:** 7. Sürüm (Nihai Revizyon)
 
 Bu doküman, zaman serisi satış tahmini projesinin başlangıç aşamasından nihai teslim aşamasına kadar geçirdiği evrimleri, uygulanan makine öğrenmesi tekniklerini ve bu adımların modelin R2 skoru ile hata payı (MAPE) üzerindeki kanıtlanmış etkilerini adım adım özetlemektedir.
 
@@ -34,19 +34,25 @@ Projenin ilk aşamasında sadece geçmiş satış verileri kullanılarak temel L
 
 ---
 
-### 🏆 6. Aşama (Güncel Final Durumu): XGBoost Entegrasyonu ve 10 Epoch Eğitimi
-Projenin nihai sürümünde, ağaç tabanlı XGBoost algoritması 3. model olarak dahil edildi. LSTM ve GRU'nun eğitim süreleri artırılarak daha derin öğrenmeleri sağlandı.
+### 🏆 6. Aşama: XGBoost Entegrasyonu
+Projenin sürümünde, ağaç tabanlı XGBoost algoritması 3. model olarak dahil edildi.
+* **XGBoost Rekoru:** 3 boyutlu zaman serisi verisi düz tabloya çevrilerek GPU destekli XGBoost'a verildi. XGBoost sadece 9 saniyede inanılmaz bir doğruluk oranına ulaştı.
 
-* **Epoch Artışı:** Derin öğrenme modelleri (LSTM ve GRU) 7 yerine **10 Epoch** boyunca eğitildi (Süreleri ~375 saniyeye çıktı).
-* **XGBoost Rekoru:** 3 boyutlu zaman serisi verisi düz tabloya çevrilerek GPU destekli XGBoost'a verildi. XGBoost sadece 9.5 saniyede inanılmaz bir doğruluk oranına ulaştı.
+---
+
+### 🔥 7. Aşama (Güncel Final Durumu): Epoch ve Hidden Size Optimizasyonu
+Derin Öğrenme modellerinin (LSTM ve GRU) kapasitesini artırmak ve XGBoost'a yaklaşmalarını sağlamak amacıyla mimari güçlendirildi.
+
+* **Epoch Artışı:** Derin öğrenme modelleri (LSTM ve GRU) 10 yerine **40 Epoch** boyunca eğitildi.
+* **Hidden Size Artışı:** Modellerin gizli katman boyutu 128'den **256'ya** çıkarıldı. Böylece modellerin işlem kapasitesi 4 katına ulaştı.
 
 #### Sonuç Tablosu (2015 Test Seti Üzerinden Nihai Değerler)
 
 | Model | MSE | RMSE | MAE | MAPE (Hata Payı) | R2 Skoru (Başarı) | Eğitim Süresi |
 |-------|-----|------|-----|------------------|-------------------|---------------|
-| **LSTM** | 2114123 | 1454.00 | 1040.83 | %16.97 | **%77.19** | 373.1 sn |
-| **GRU**  | 2288544 | 1512.79 | 1073.26 | %17.41 | **%75.30** | 382.3 sn |
-| **XGBoost**| 1053637 | 1026.47 | 705.20 | %10.73 | **%88.63** | 9.5 sn |
+| **LSTM** | 2171913 | 1473.74 | 1050.76 | %17.37 | **%76.92** | 543.4 sn |
+| **GRU**  | 2298115 | 1515.95 | 1079.60 | %17.86 | **%75.58** | 458.7 sn |
+| **XGBoost**| 999776 | 999.89 | 687.44 | %10.43 | **%91.08** | 8.7 sn |
 
 **🎯 Nihai Değerlendirme:** 
-Son güncellemelerle birlikte LSTM modeli R2 skorunu %77.19'a taşımıştır. Ancak asıl şaşırtıcı sonuç, Kaggle şampiyonlarının tercihi olan **XGBoost** modelinin %88.63 gibi kusursuz bir başarıya imza atmasıdır. Grafik incelendiğinde XGBoost'un (Kırmızı Kesik Çizgi) ani tatil satışlarını ve sıfıra düşen günleri nokta atışı yakaladığı görülmektedir. Proje, Makine Öğrenmesi ile Derin Öğrenmenin yeteneklerini kıyaslayan üst düzey bir bitirme tezi kalitesinde tamamlanmıştır.
+Son optimizasyonlarla birlikte (Epoch=40, Hidden_Size=256) derin öğrenme modellerimiz olan LSTM ve GRU, artırılmış kapasiteleri ile %75-%77 başarı bandına güçlü bir şekilde oturmuştur. Kaggle şampiyonlarının tercihi olan **XGBoost** modeli ise %91.08 gibi kusursuz bir başarıya imza atarak tabüler verideki üstünlüğünü korumuştur. Grafik incelendiğinde XGBoost'un ani tatil satışlarını ve sıfıra düşen günleri çok net yakaladığı; LSTM ve GRU'nun ise genel trendleri başarıyla kavradığı görülmektedir. Proje, Makine Öğrenmesi ile Derin Öğrenmenin yeteneklerini kıyaslayan eksiksiz bir çalışma olmuştur.

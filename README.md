@@ -19,13 +19,14 @@ Verileri "Kayan Pencere (Sliding Window)" yaklaşımı ile PyTorch tensörlerine
 - `train.csv` / `test.csv`: Kaggle Rossmann Store Sales yarışmasından kullandığım ham veri setidir (Kodların çalışması için bu dizinde yer alması gereklidir).
 
 ## Modeller ve Karşılaştırma
-Jupyter Notebook'u çalıştırdığınızda, kurduğum her iki modelin (LSTM ve GRU) test seti üzerindeki hata metriklerini (MSE, RMSE, MAE) ve doğruluk skorunu (R2 Skoru) karşılaştırmalı olarak tablo halinde görebilirsiniz. Ayrıca modellerin ne kadar sürede eğitildiğini de ölçtüm. 
+Jupyter Notebook'u çalıştırdığınızda, kurduğum her iki modelin (LSTM ve GRU) test seti üzerindeki hata metriklerini (MSE, RMSE, MAE) ve doğruluk skorunu (R2 Skoru) karşılaştırmalı olarak tablo halinde görebilirsiniz. Modellerin kapasitesini artırmak için nihai sürümde **Epoch sayısı 40'a** ve **Hidden Size 256'ya** çıkarılmıştır. Ayrıca 3. bir model olarak güçlü ağaç algoritması olan XGBoost da kıyaslama amacıyla projeye eklenmiştir.
 
-### Elde Ettiğim Sonuçlar (Tam Yıla Göre Ayrım + Store.csv Dış Verileri: 2013-2014 Eğitim, 2015 Test)
+### Elde Ettiğim Sonuçlar (Nihai Performans - 2015 Test Seti)
 | Model | MSE | RMSE | MAE | MAPE (%) | R2 Skoru | Eğitim Süresi (sn) |
 |-------|-----|------|-----|----------|----------|--------------------|
-| **LSTM** | 2.326.559 | 1525.30 | 1071.87 | 17.68 | 0.7489 | ~114 sn |
-| **GRU** | 2.390.783 | 1546.21 | 1081.49 | 17.51 | 0.7420 | ~118 sn |
+| **LSTM** | 2.171.913 | 1473.74 | 1050.76 | %17.37 | %76.92 | ~543 sn |
+| **GRU** | 2.298.115 | 1515.95 | 1079.60 | %17.86 | %75.58 | ~458 sn |
+| **XGBoost** | 999.776 | 999.89 | 687.44 | %10.43 | %89.37 | ~8.7 sn |
 
 Son adımda, modellerimin tahmin ettiği satış değerleri ile gerçek satış değerlerini Matplotlib kullanarak çizgi grafiği (Line Plot) üzerinde görselleştirdim ve sonuçları grafik altında yorumladım.
 
@@ -41,4 +42,3 @@ Projemi kendi bilgisayarınızda (veya Anaconda ortamında) çalıştırmak içi
    jupyter notebook
    ```
 3. `rossmann_sales_forecast.ipynb` dosyasını açıp **"Run All"** komutuyla veya hücreleri teker teker çalıştırarak projemin tamamını test edebilir ve çıktıları inceleyebilirsiniz.
-

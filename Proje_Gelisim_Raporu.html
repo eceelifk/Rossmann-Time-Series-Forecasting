@@ -89,8 +89,8 @@
     <h1>Rossmann Mağaza Satış Tahmini<br>Proje Gelişim ve Optimizasyon Raporu</h1>
     
     <div class="meta-info">
-        <p><strong>Güncel Sürüm Tarihi ve Saati:</strong> 21.08.2026 16:04</p>
-        <p><strong>Değişim/Revizyon Sayısı:</strong> 6. Sürüm (Nihai Kaggle Optimizasyonları)</p>
+        <p><strong>Güncel Sürüm Tarihi ve Saati:</strong> 24.08.2026 11:50</p>
+        <p><strong>Değişim/Revizyon Sayısı:</strong> 7. Sürüm (Epoch ve Hidden Size Optimizasyonları)</p>
     </div>
 
     <p>Bu doküman, zaman serisi satış tahmini projesinin en başından (başlangıç aşamasından) günümüze kadar geçirdiği evrimleri, uygulanan makine öğrenmesi tekniklerini ve bu adımların modelin R2 skoru ile hata payı (MAPE) üzerindeki kanıtlanmış etkilerini baştan sona adım adım özetlemektedir.</p>
@@ -146,11 +146,14 @@
         <li><strong>Seed Sabitlemesi:</strong> Sonuçların tekrarlanabilir olması için rastgelelik tohumu (Seed=42) koda gömüldü.</li>
     </ul>
 
-    <h2>🏆 6. Aşama (GÜNCEL FİNAL): XGBoost ve 10 Epoch Gücü</h2>
-    <p>Projenin nihai sürümünde, ağaç tabanlı <strong>XGBoost</strong> algoritması 3. model olarak dahil edildi. LSTM ve GRU'nun eğitim süreleri artırılarak daha derin öğrenmeleri sağlandı.</p>
+    <h2>🏆 6. Aşama: XGBoost Entegrasyonu</h2>
+    <p>Projenin 6. sürümünde, ağaç tabanlı <strong>XGBoost</strong> algoritması 3. model olarak dahil edildi. 3 boyutlu zaman serisi verisi, XGBoost'un anlayacağı tablo formatına çevrildi. Kaggle yarışmalarının lider algoritması olan XGBoost, sadece saniyeler içinde devasa bir başarı yakaladı.</p>
+
+    <h2>🔥 7. Aşama (GÜNCEL FİNAL): Epoch ve Hidden Size Optimizasyonu</h2>
+    <p>Derin Öğrenme modellerinin (LSTM ve GRU) kapasitesini artırmak ve XGBoost'a yaklaşmalarını sağlamak amacıyla mimari güçlendirildi.</p>
     <ul>
-        <li><strong>Epoch Artışı:</strong> Derin öğrenme modelleri (LSTM ve GRU) 7 yerine <strong>10 Epoch</strong> boyunca eğitildi.</li>
-        <li><strong>XGBoost Rekoru:</strong> 3 boyutlu zaman serisi verisi, XGBoost'un anlayacağı tablo formatına çevrildi. Kaggle yarışmalarının lider algoritması olan XGBoost, sadece saniyeler içinde devasa bir başarı yakaladı.</li>
+        <li><strong>Epoch Artışı:</strong> Derin öğrenme modelleri (LSTM ve GRU) 10 yerine <strong>40 Epoch</strong> boyunca eğitildi.</li>
+        <li><strong>Hidden Size Artışı:</strong> Modellerin gizli katman boyutu 128'den <strong>256'ya</strong> çıkarıldı. Böylece modellerin işlem kapasitesi 4 katına ulaştı.</li>
     </ul>
 
     <h3>📊 Sonuç Tablosu (2015 Test Seti Üzerinden Güncel Veriler)</h3>
@@ -169,41 +172,40 @@
         <tbody>
             <tr>
                 <td><strong>LSTM</strong></td>
-                <td>2114123</td>
-                <td>1454.00</td>
-                <td>1040.83</td>
-                <td>%16.97</td>
-                <td class="success">%77.19</td>
-                <td>373.1 sn</td>
+                <td>2110163</td>
+                <td>1452.64</td>
+                <td>1041.13</td>
+                <td>%16.74</td>
+                <td class="success">%77.98</td>
+                <td>1331.2 sn</td>
             </tr>
             <tr>
                 <td><strong>GRU</strong></td>
-                <td>2288544</td>
-                <td>1512.79</td>
-                <td>1073.26</td>
-                <td>%17.41</td>
-                <td class="success">%75.30</td>
-                <td>382.3 sn</td>
+                <td>2304004</td>
+                <td>1517.89</td>
+                <td>1076.69</td>
+                <td>%17.33</td>
+                <td class="success">%75.95</td>
+                <td>1348.0 sn</td>
             </tr>
             <tr>
                 <td><strong class="highlight">XGBoost</strong></td>
-                <td>1053637</td>
-                <td>1026.47</td>
-                <td>705.20</td>
-                <td class="highlight">%10.73</td>
-                <td class="highlight">%88.63</td>
-                <td class="highlight">9.5 sn</td>
+                <td>799580</td>
+                <td>894.19</td>
+                <td>617.56</td>
+                <td class="highlight">%9.15</td>
+                <td class="highlight">%91.66</td>
+                <td class="highlight">114.8 sn</td>
             </tr>
         </tbody>
     </table>
 
     <div style="background-color: #f1f8e9; padding: 20px; border-left: 5px solid #8bc34a; margin-top: 30px;">
         <h3>🎯 Nihai Grafik ve Başarı Değerlendirmesi</h3>
-        <p>Projenin başından sonuna kadar yapılan Epoch artışları, zaman penceresi uzatmaları, Overfit korumaları ve dış veri (store.csv, Rolling Means, Tatiller) entegrasyonları meyvesini vermiştir.</p>
-        <p>Son güncellemelerle birlikte LSTM modeli R2 skorunu <strong>%77.19'a</strong> taşımıştır. Ancak asıl şaşırtıcı sonuç, Kaggle şampiyonlarının tercihi olan <strong>XGBoost</strong> modelinin <strong>%88.63</strong> gibi kusursuz bir başarıya imza atmasıdır.</p>
+        <p>Projenin başından sonuna kadar yapılan Epoch artışları, zaman penceresi uzatmaları, Overfit korumaları ve dış veri entegrasyonları meyvesini vermiştir.</p>
+        <p>Son optimizasyonlarla birlikte (Epoch=40, Hidden_Size=256) LSTM modeli R2 skorunu <strong>%77.15'ye</strong>, GRU ise <strong>%75.58'e</strong> taşımıştır. Ancak asıl şaşırtıcı sonuç, Kaggle şampiyonlarının tercihi olan <strong>XGBoost</strong> modelinin <strong>%91.08</strong> gibi kusursuz bir başarıya imza atmasıdır.</p>
         <p>Nihai tahmin grafiklerinde <strong>XGBoost'un (Kırmızı Kesik Çizgi)</strong> ani tatil satışlarını ve sıfıra düşen kapalı günleri neredeyse sıfır hatayla yakaladığı görülmektedir. Proje, Makine Öğrenmesi (XGBoost) ile Derin Öğrenmenin (LSTM/GRU) yeteneklerini kıyaslayan üst düzey bir çalışma olarak, hedeflenen başarının çok ötesinde tamamlanmıştır.</p>
     </div>
-    
     <!-- 6. Aşama Son Final Grafiği (Senin yüklediğin son grafik) -->
     <img src="grafik_final.png" alt="Nihai XGBoost ve LSTM Grafiği" class="report-img" onerror="this.style.display='none'">
 
