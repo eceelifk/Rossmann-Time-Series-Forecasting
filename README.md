@@ -1,44 +1,66 @@
-# Rossmann Mağaza Satış Tahmini (Aşama 2 Projesi)
+# 🛒 Rossmann Mağaza Satış Tahmini Modeli
 
-Bu projeyi, Microsoft Staj Programım kapsamındaki "Aşama 2 (Zaman Serisi Tahmin Modeli)" gereksinimlerine uygun olarak PyTorch kullanarak geliştirdim. 
-Projemin amacı, Kaggle'daki Rossmann veri setini kullanarak geçmiş mağaza satışlarına dayanarak gelecekteki mağaza satışlarını (regresyon problemi) tahmin etmektir.
+![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=PyTorch&logoColor=white)
+![XGBoost](https://img.shields.io/badge/XGBoost-%23150458.svg?style=for-the-badge&logo=XGBoost&logoColor=white)
+![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white)
+![Scikit-Learn](https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white)
 
-## Proje Hakkında
-Projemi geliştirirken, derin öğrenme tabanlı zaman serisi mimarilerinden olan **LSTM (Long Short-Term Memory)** ve **GRU (Gated Recurrent Unit)** modellerini kullandım. 
-Verileri "Kayan Pencere (Sliding Window)" yaklaşımı ile PyTorch tensörlerine uyarladım. Kapsamlı bir çalışma olması için, sadece tek bir mağazayı değil tüm mağazaların verilerini modele dahil ederek genel bir tahmin modeli eğittim.
+**Microsoft Staj Programı - 2. Aşama Projesi** kapsamında geliştirilmiş, derin öğrenme (Deep Learning) ve makine öğrenmesi (Machine Learning) tabanlı zaman serisi satış tahminleme projesidir.
 
-## Kullanılan Teknolojiler
-- **Python 3.x**
-- **PyTorch** (Derin Öğrenme / Model Kurulumu ve Eğitimi)
-- **Pandas** (Veri Analizi ve Ön İşleme)
-- **Scikit-Learn** (MinMaxScaler ile Ölçeklendirme ve MSE/RMSE Hesaplamaları)
-- **Matplotlib** (Elde Ettiğim Sonuçların Görselleştirilmesi)
+---
 
-## Dosya Yapısı
-- `rossmann_sales_forecast.ipynb`: Veri ön işleme, veri ölçeklendirme, model oluşturma (LSTM ve GRU), eğitim ve test aşamalarının tamamını kodladığım ana Jupyter Notebook dosyasıdır.
-- `train.csv` / `test.csv`: Kaggle Rossmann Store Sales yarışmasından kullandığım ham veri setidir (Kodların çalışması için bu dizinde yer alması gereklidir).
+##  Proje Hakkında
+Bu projenin amacı, Avrupa'nın önde gelen eczane zincirlerinden Rossmann'ın tarihsel satış verilerini kullanarak **gelecekteki günlük mağaza satışlarını yüksek doğrulukla tahmin etmektir.** 
 
-## Modeller ve Karşılaştırma
-Jupyter Notebook'u çalıştırdığınızda, kurduğum her iki modelin (LSTM ve GRU) test seti üzerindeki hata metriklerini (MSE, RMSE, MAE) ve doğruluk skorunu (R2 Skoru) karşılaştırmalı olarak tablo halinde görebilirsiniz. Modellerin kapasitesini artırmak için nihai sürümde **Epoch sayısı 40'a** ve **Hidden Size 256'ya** çıkarılmıştır. Ayrıca 3. bir model olarak güçlü ağaç algoritması olan XGBoost da kıyaslama amacıyla projeye eklenmiştir.
+Klasik yaklaşımlardan farklı olarak sadece tek bir mağazanın değil, yüzlerce mağazanın verisi entegre bir şekilde işlenmiş; zaman serisi dinamikleri **Kayan Pencere (Sliding Window)** yaklaşımıyla PyTorch tensörlerine uyarlanarak modellenmiştir.
 
-### Elde Ettiğim Sonuçlar (Nihai Performans - 2015 Test Seti)
-| Model | MSE | RMSE | MAE | MAPE (%) | R2 Skoru | Eğitim Süresi (sn) |
-|-------|-----|------|-----|----------|----------|--------------------|
-| **LSTM** | 2.171.913 | 1473.74 | 1050.76 | %17.37 | %76.92 | ~543 sn |
-| **GRU** | 2.298.115 | 1515.95 | 1079.60 | %17.86 | %75.58 | ~458 sn |
-| **XGBoost** | 999.776 | 999.89 | 687.44 | %10.43 | %89.37 | ~8.7 sn |
+##  Öne Çıkan Özellikler ve Veri Mühendisliği
+Modelin ezberlemesini (overfitting) önlemek ve yüksek skorlara ulaşmasını sağlamak için yoğun bir **Feature Engineering** (Veri Mühendisliği) çalışması yapılmıştır:
+- **Tarihsel Zenginleştirme:** Hafta içi/hafta sonu ayrımları, okul ve resmi tatil günleri (StateHoliday) modele entegre edildi.
+- **Rakip Mağaza Etkisi:** `CompetitionDistance` (Rakip mağazaya uzaklık) metrikleri NaN boşluklarından arındırılarak eklendi.
+- **Hareketli Ortalamalar:** Modelin anlık zıplamalardan etkilenmemesi için `Sales_Rolling_7` (7 Günlük Satış Ortalaması) hesaplandı.
+- **Gelişmiş Ölçeklendirme:** Hem satış verileri hem de rakip mesafe verileri `MinMaxScaler` kullanılarak optimize edildi.
 
-Son adımda, modellerimin tahmin ettiği satış değerleri ile gerçek satış değerlerini Matplotlib kullanarak çizgi grafiği (Line Plot) üzerinde görselleştirdim ve sonuçları grafik altında yorumladım.
+##  Model Mimarileri
+Projeye birbirine alternatif 3 farklı güçlü algoritma dahil edilmiş ve performansları bilimsel metriklerle karşılaştırılmıştır:
+1. **LSTM (Long Short-Term Memory):** 256 Hidden Size ve %30 Dropout ile optimize edilmiş derin öğrenme ağı.
+2. **GRU (Gated Recurrent Unit):** 256 Hidden Size'lı, daha hızlı eğitim süresine sahip RNN türevi.
+3. **XGBoost (Extreme Gradient Boosting):** 1000 ağaç (n_estimators), 9 max_depth ve 0.9 subsample ayarlarıyla modifiye edilmiş, şampiyon makine öğrenmesi algoritması.
 
-## Kurulum ve Kullanım
-Projemi kendi bilgisayarınızda (veya Anaconda ortamında) çalıştırmak için şu adımları izleyebilirsiniz:
+---
 
-1. Gerekli Python kütüphanelerinin sisteminizde kurulu olduğundan emin olun. Değilse terminalden (veya Anaconda Prompt üzerinden) indirebilirsiniz:
-   ```bash
-   pip install pandas numpy torch scikit-learn matplotlib
-   ```
-2. Proje dizinine gidip terminalden jupyter ortamını başlatın:
-   ```bash
-   jupyter notebook
-   ```
-3. `rossmann_sales_forecast.ipynb` dosyasını açıp **"Run All"** komutuyla veya hücreleri teker teker çalıştırarak projemin tamamını test edebilir ve çıktıları inceleyebilirsiniz.
+##  Nihai Performans ve Sonuçlar
+Modeller, **2013-2014 verileriyle eğitilmiş** ve daha önce hiç görmedikleri **2015 test verisi (%20)** üzerinde sınanmıştır. 
+
+Aşağıdaki tablo, modellerin test seti üzerindeki nihai (gerçek dünya) başarısını göstermektedir:
+
+| Model | MSE | RMSE | MAE | MAPE (%) | R2 Skoru | Eğitim Süresi |
+|-------|-----|------|-----|----------|----------|---------------|
+| **XGBoost** | ~784,000 | ~885.00 | ~620.00 | **%9.45** | **%91.66** | ~110 sn |
+| **LSTM** | ~2,070,000| ~1438.00| ~1010.00| **%16.80**| **%77.98** | ~22 dk |
+| **GRU** | ~2,260,000| ~1503.00| ~1050.00| **%17.50**| **%75.95** | ~18 dk |
+
+*(Yukarıdaki R2 Skorları, hedeflenen %80 doğruluk barajını XGBoost ile %91'lere taşıyarak projenin beklentileri fazlasıyla aştığını kanıtlamaktadır.)*
+
+### Modellerin Metrik Karşılaştırması
+Aşağıdaki grafikler, modellerin hata paylarını ve doğruluk oranlarını görsel olarak kıyaslamaktadır:
+
+![Metrik Karşılaştırması](metrics_comparison.png)
+
+---
+
+##  Kurulum ve Kullanım
+Bu projeyi kendi bilgisayarınızda çalıştırmak için:
+
+**1. Gerekli kütüphaneleri yükleyin:**
+```bash
+pip install pandas numpy torch scikit-learn matplotlib seaborn xgboost
+```
+
+**2. Jupyter Notebook'u başlatın:**
+```bash
+jupyter notebook
+```
+
+**3. Test Edin:**
+`rossmann_sales_forecast.ipynb` dosyasını açıp üst menüden **Kernel -> Restart & Run All** seçeneğine tıklayarak baştan sona veri işleme, eğitim, test ve metrik çizim süreçlerini canlı olarak deneyimleyebilirsiniz.
