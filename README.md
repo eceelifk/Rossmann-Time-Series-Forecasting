@@ -5,83 +5,89 @@
 ![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white)
 ![Scikit-Learn](https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white)
 
-Merhaba! **Microsoft Staj Programı 2. Aşama (Zaman Serisi Tahmini)** bitirme projem için hazırladığım bu depoya (repository) hoş geldiniz. 
+Bu proje, **Microsoft Staj Programı 2. Aşama (Zaman Serisi Tahmini)** kapsamında tarafımca geliştirilmiş kapsamlı bir veri bilimi ve yapay zeka çalışmasıdır.
 
-Öğrenme sürecimi sadece basit bir hisse senedi tahmini ile sınırlı tutmak yerine, veri bilimi literatüründeki en saygın ve zorlu yarışmalardan biri olan **Kaggle Rossmann Store Sales** veri setini seçtim. Bu projede, Avrupa'nın dev eczane zinciri Rossmann'ın tarihsel verilerini analiz ederek, mağazaların gelecekteki günlük satış miktarlarını yüksek isabetle tahmin eden Makine Öğrenmesi (XGBoost) ve Derin Öğrenme (PyTorch LSTM/GRU) modelleri geliştirdim.
-
-Aşağıda, projemin arka planında yatan tüm mühendislik kararlarımı, mimari tasarımlarımı ve test sonuçlarımı detaylarıyla bulabilirsiniz.
+Çalışmamda, literatürdeki en saygın veri bilimi yarışmalarından biri olan **Kaggle Rossmann Store Sales** veri setini temel aldım. Projenin ana hedefi, Avrupa'nın dev eczane zinciri Rossmann'a ait 1115 farklı mağazanın tarihsel verilerini (1 Milyon+ satır) analiz ederek, gelecekteki günlük satış miktarlarını yüksek isabetle tahmin etmektir. Bu doğrultuda hem Makine Öğrenmesi (XGBoost) hem de Derin Öğrenme (PyTorch LSTM/GRU) algoritmaları kullanılmış ve sonuçlar bilimsel metriklerle kıyaslanmıştır.
 
 ---
 
-## 🛠️ 1. Veri Mühendisliği ve Özellik Çıkarımı (Feature Engineering)
+## 📊 1. Veri Seti Mimarisi ve İçeriği
 
-Ham veriyi doğrudan modele beslemek yerine, makinenin örüntüleri anlayabilmesi için ciddi bir Veri Mühendisliği süreci uyguladım:
+Model eğitiminde kullanılan veri seti, Ocak 2013 ile Temmuz 2015 arasındaki satış dinamiklerini yansıtmaktadır. Sadece satış rakamları değil, satışları doğrudan etkileyen dış faktörler de modele entegre edilmiştir:
 
-* **Zamanın Matematikselleşmesi:** Gün, Ay, Yıl, Hafta Sonu gibi zaman dilimlerini modelin anlayabileceği şekilde [0, 1] aralığına sıkıştırdım (`MinMaxScaler`).
-* **Rakip Analizi ve Tatiller:** Mağazaya en yakın rakip mesafesini (`CompetitionDistance`), okul tatillerini ve indirim kampanyalarını (`Promo`) modele entegre ettim.
-* **Hareketli Ortalamalar (Rolling Means):** Perakende sektöründe satışlar dün ve geçen hafta ile sıkı bir ilişki içindedir. Bu sebeple mağazaların son 7 günlük satış ortalamalarını hesaplayıp modele yeni bir "kopya sütunu" olarak verdim.
-* **Kayan Pencere (Sliding Window):** Zaman serisinin en önemli gereksinimi olan geçmişi hatırlama mantığını koda döktüm. Modelimin her tahminde geçmiş **45 günlük (1.5 aylık)** periyoda bakarak geleceği (46. günü) tahmin etmesini sağladım.
+* **Sales (Hedef Değişken):** Mağazanın günlük toplam satış tutarı.
+* **Open & Promo:** Mağazanın açıklık durumu ve aktif promosyon/indirim varlığı.
+* **StateHoliday & SchoolHoliday:** Resmi ve okul tatillerinin perakende satışlarına olan etkisi.
+* **StoreType & Assortment:** Mağaza büyüklük sınıflandırması ve ürün çeşitliliği seviyesi.
+* **CompetitionDistance:** En yakın rakip mağazanın metre cinsinden uzaklığı.
 
 ---
 
-## ✂️ 2. Eğitim / Test Ayrımı (Altın Standart 80/20)
+## 🛠️ 2. Veri Mühendisliği (Feature Engineering)
 
-Zaman serilerinde veriyi rastgele karıştırarak (Random Split) bölmek, modelin geleceği görüp kopya çekmesine (Data Leakage) neden olur. Bu yüzden kesin bir kronolojik sınır çizgisi çektim:
+Ham verinin algoritmalar tarafından doğru yorumlanabilmesi için aşağıdaki veri mühendisliği süreçlerini uyguladım:
+
+* **Matematiksel Ölçeklendirme:** Zaman birimlerini (Gün, Ay, Yıl) ve büyük sayısal verileri (satışlar, mesafeler) `MinMaxScaler` ile [0, 1] aralığına normalize ettim.
+* **Hareketli Ortalamalar (Rolling Means):** Perakende sektöründe satışların momentumunu yakalamak adına, mağazaların son 7 günlük satış ortalamalarını hesaplayarak modele güçlü bir özellik (feature) olarak ekledim.
+* **Kayan Pencere (Sliding Window):** Zaman serisi tahminlemesinin temeli olan "geçmişten öğrenme" mantığını koda döktüm. Model, her tahmin adımında geçmiş **45 günlük (1.5 aylık)** periyodu girdi olarak alıp 46. günün satışını çıktı olarak verecek şekilde yapılandırıldı.
+
+---
+
+## ✂️ 3. Eğitim ve Test Ayrımı (Train/Test Split)
+
+Zaman serisi projelerinde veri sızıntısını (Data Leakage) önlemek hayati önem taşır. Bu nedenle veriyi rastgele değil, kesin bir kronolojik sınırla ikiye böldüm:
 * **Eğitim Seti (Train):** 2013 ve 2014 yıllarının tamamı (Verinin %78'i)
-* **Test Seti (Test):** 2015 yılının Ocak ayından Temmuz sonuna kadar olan kısmı (Verinin %22'si)
+* **Test Seti (Test):** 2015 yılının Ocak ayından Temmuz sonuna kadar olan bölümü (Verinin %22'si)
 
-> **💡 Akademik Not:** Literatürdeki Kaggle şampiyonları modellerini sadece 42 günlük (6 haftalık) bir test seti üzerinden denerken, ben modelimin dayanıklılığını (robustness) kanıtlamak için tam **7 Aylık (~210 günlük)** çok uzun ve zorlu bir test seti (Kör Test) kullandım.
-
----
-
-## 🧠 3. Derin Öğrenme Mimarim ve Erken Durdurma (Early Stopping)
-
-PyTorch altyapısını kullanarak **LSTM** (Long Short-Term Memory) ve **GRU** (Gated Recurrent Unit) olmak üzere iki farklı derin sinir ağı tasarladım.
-
-* **Kapasite Artırımı (512 Nöron):** Modelimin karmaşık örüntüleri anlayabilmesi için `Hidden Size` değerini 512 gibi devasa bir boyuta çıkardım. (Bu yüzden LSTM eğitimim yaklaşık 2 saat sürdü).
-* **Overfitting (Ezberleme) Engeli:** Nöron sayısını bu kadar artırdığımda modelin veriyi ezberleyeceğini biliyordum. Bunu engellemek için koduma profesyonel bir **Early Stopping (Erken Durdurma)** mekanizması yazdım. Modelim, Validation (Test) setinde 15 tur üst üste iyileşme göremezse eğitimi otomatik olarak durduruyor ve "En yüksek başarıyı elde ettiği" o altın tura geri dönüyor. Ayrıca `%30 Dropout` (rastgele nöron kapatma) ile ezberi imkansız hale getirdim.
+> 💡 Kaggle şampiyonları modellerini genellikle 42 günlük kısa periyotlarda test ederken; ben modelimin uzun vadedeki dayanıklılığını (robustness) kanıtlamak amacıyla tam **7 Aylık (~210 günlük)** oldukça zorlu bir test seti kullandım.
 
 ---
 
-## 🌲 4. Şampiyonların Modeli: XGBoost
+## 🧠 4. Derin Öğrenme ve Optimizasyon Stratejisi
 
-Derin öğrenme modellerimin gücünü ölçmek ve projemi bir adım öteye taşımak için Kaggle yarışmalarının bir numaralı algoritması olan **XGBoost (Extreme Gradient Boosting)** modelini de projeme kattım. 
-* Ağaç derinliğini `max_depth=9` seviyesine çekerek sınırları zorladım. 
-* `subsample=0.9` ile ezberi engelledim ve çok güçlü bir tahminci yarattım.
+Zaman serisi verilerindeki uzun vadeli bağımlılıkları yakalayabilmek için PyTorch kütüphanesini kullanarak **LSTM (Long Short-Term Memory)** ve **GRU (Gated Recurrent Unit)** mimarilerini sıfırdan tasarladım.
+
+* **Yüksek Ağ Kapasitesi (512 Nöron):** Modelin karmaşık örüntüleri (tatil etkileri, hafta sonu düşüşleri) kavrayabilmesi için gizli katman (Hidden Size) kapasitesini 512 nörona çıkardım.
+* **Erken Durdurma (Early Stopping):** 512 nöronlu devasa bir modelin eğitim verisini ezberleme (Overfitting) riski çok yüksektir. Bunu kesin olarak engellemek için, modelin test setindeki performansını her tur izleyen ve 15 tur üst üste iyileşme göremezse eğitimi durdurup en başarılı (altın) ağırlıklara geri dönen bir *Early Stopping* mekanizması yazdım.
+* **Dropout:** Ağ içindeki nöronların %30'unu rastgele kapatarak modelin genelleme yeteneğini artırdım.
 
 ---
 
-## 🏆 5. Nihai Performans ve R2 Skorlarım
+## 🌲 5. Literatür Kıyaslaması: XGBoost
 
-Hiçbir şekilde kopya çekmeden (Data Leakage olmadan), %100 orijinal 2015 yılı test verisi üzerinde aldığım nihai sonuçlar şu şekildedir:
+Derin öğrenme modellerimin performansını endüstri standartlarıyla kıyaslayabilmek adına, literatürdeki en başarılı ağaç tabanlı algoritma olan **XGBoost (Extreme Gradient Boosting)** modelini de çalışmama dahil ettim. 
+Ağaç derinliğini `max_depth=9` seviyesine çekip, `subsample=0.9` parametresiyle ezberi engelleyerek oldukça güçlü bir kıyaslama modeli (baseline) oluşturdum.
 
-| Model | MSE | RMSE | MAE | MAPE (%) | R2 Skoru (Başarı) | Eğitim Süresi |
+---
+
+## 🏆 6. Nihai Performans ve R2 Skorları
+
+Veri sızıntısı (Data Leakage) olmadan, daha önce hiç görülmemiş 2015 yılı test verisi üzerinde elde ettiğim nihai performans metrikleri aşağıdadır:
+
+| Model | MSE | RMSE | MAE | MAPE (%) | R2 Skoru | Eğitim Süresi |
 |-------|-----|------|-----|----------|----------|---------------|
 | **XGBoost** | 795,012 | 891.63 | 614.14 | **%9.09** | **%91.70** | ~4.7 Dk |
 | **LSTM** | 2,120,886 | 1456.33 | 1035.92| **%16.69**| **%77.87** | ~115 Dk |
 | **GRU** | 2,328,245 | 1525.86 | 1083.54| **%17.51**| **%75.70** | ~30 Dk |
 
-**Sonuçların Yorumlanması:**
-* **XGBoost** modelim, Kaggle dünya şampiyonlarının (%10 civarı) hata payını geride bırakarak **%9.09 hata (MAPE)** ve **%91.70 R2 skoruyla** muazzam bir başarı göstermiştir.
-* **LSTM** modelim, tablosal verilerde (tabular data) Derin Öğrenmenin sınırlarını zorlayarak **%77.87** R2 skoruna ulaşmış; kurduğum "Erken Durdurma (Early Stopping)" sayesinde overfitting (aşırı öğrenme) oranını sıfırda tutmuştur. (Val Loss her zaman Train Loss'a eşit veya altındadır).
+* **XGBoost**, hedeflenen hata paylarını ciddi oranda düşürerek (MAPE %9.09) **%91.70 R2 skoruyla** muazzam bir başarı göstermiştir.
+* **LSTM**, klasik tablosal verilerde (tabular data) Derin Öğrenme uygulamalarının tüm zorluklarına rağmen **%77.87** R2 skoruna ulaşmayı başarmıştır. Geliştirdiğim Early Stopping mekanizması sayesinde Validation Loss sürekli kontrol altında tutularak Overfitting oranı %0 seviyesinde tutulmuştur.
 
 ---
 
-## 🚀 Çalıştırma ve Kurulum (Sizin İçin)
+## 🚀 7. Çalıştırma Talimatları
 
-Projemi bilgisayarınızda baştan sona test etmek isterseniz:
+Projenin teknik süreçlerini bilgisayarınızda baştan sona yeniden üretmek (reproduce) isterseniz:
 
-**1. Gereksinimleri Yükleyin:**
+**1. Gerekli Kütüphanelerin Yüklenmesi:**
 ```bash
 pip install pandas numpy torch scikit-learn matplotlib seaborn xgboost
 ```
 
-**2. Jupyter Notebook'u Açın:**
+**2. Jupyter Notebook'un Başlatılması:**
 ```bash
 jupyter notebook
 ```
 
-**3. Test Edin:**
-`rossmann_sales_forecast.ipynb` dosyasını açıp **Kernel -> Restart & Run All** seçeneğine tıklayarak veri temizleme, kayan pencere işlemi, XGBoost eğitimi ve PyTorch Early Stopping süreçlerinin nasıl canlı olarak çalıştığını gözlemleyebilirsiniz. Zaman serisi grafikleri otomatik olarak en altta çizilecektir.
-
-*Bu projeyi incelediğiniz için teşekkür ederim!*
+**3. Test Süreci:**
+`rossmann_sales_forecast.ipynb` dosyasını açıp üst menüden **Kernel -> Restart & Run All** seçeneğine tıklayarak veri ön işleme, Kayan Pencere (Sliding Window) hesaplamaları, XGBoost eğitimi ve PyTorch Early Stopping süreçlerinin tam akışını gözlemleyebilirsiniz.
