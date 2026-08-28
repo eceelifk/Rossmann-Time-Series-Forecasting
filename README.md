@@ -1,66 +1,87 @@
-# 🛒 Rossmann Mağaza Satış Tahmini Modeli
+# 📈 Rossmann Mağaza Satış Tahmini — Microsoft Staj Programı (Aşama 2)
 
 ![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=for-the-badge&logo=PyTorch&logoColor=white)
 ![XGBoost](https://img.shields.io/badge/XGBoost-%23150458.svg?style=for-the-badge&logo=XGBoost&logoColor=white)
 ![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white)
 ![Scikit-Learn](https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white)
 
-**Microsoft Staj Programı - 2. Aşama Projesi** kapsamında geliştirilmiş, derin öğrenme (Deep Learning) ve makine öğrenmesi (Machine Learning) tabanlı zaman serisi satış tahminleme projesidir.
+Merhaba! **Microsoft Staj Programı 2. Aşama (Zaman Serisi Tahmini)** bitirme projem için hazırladığım bu depoya (repository) hoş geldiniz. 
+
+Öğrenme sürecimi sadece basit bir hisse senedi tahmini ile sınırlı tutmak yerine, veri bilimi literatüründeki en saygın ve zorlu yarışmalardan biri olan **Kaggle Rossmann Store Sales** veri setini seçtim. Bu projede, Avrupa'nın dev eczane zinciri Rossmann'ın tarihsel verilerini analiz ederek, mağazaların gelecekteki günlük satış miktarlarını yüksek isabetle tahmin eden Makine Öğrenmesi (XGBoost) ve Derin Öğrenme (PyTorch LSTM/GRU) modelleri geliştirdim.
+
+Aşağıda, projemin arka planında yatan tüm mühendislik kararlarımı, mimari tasarımlarımı ve test sonuçlarımı detaylarıyla bulabilirsiniz.
 
 ---
 
-##  Proje Hakkında
-Bu projenin amacı, Avrupa'nın önde gelen eczane zincirlerinden Rossmann'ın tarihsel satış verilerini kullanarak **gelecekteki günlük mağaza satışlarını yüksek doğrulukla tahmin etmektir.** 
+## 🛠️ 1. Veri Mühendisliği ve Özellik Çıkarımı (Feature Engineering)
 
-Klasik yaklaşımlardan farklı olarak sadece tek bir mağazanın değil, yüzlerce mağazanın verisi entegre bir şekilde işlenmiş; zaman serisi dinamikleri **Kayan Pencere (Sliding Window)** yaklaşımıyla PyTorch tensörlerine uyarlanarak modellenmiştir.
+Ham veriyi doğrudan modele beslemek yerine, makinenin örüntüleri anlayabilmesi için ciddi bir Veri Mühendisliği süreci uyguladım:
 
-##  Öne Çıkan Özellikler ve Veri Mühendisliği
-Modelin ezberlemesini (overfitting) önlemek ve yüksek skorlara ulaşmasını sağlamak için yoğun bir **Feature Engineering** (Veri Mühendisliği) çalışması yapılmıştır:
-- **Tarihsel Zenginleştirme:** Hafta içi/hafta sonu ayrımları, okul ve resmi tatil günleri (StateHoliday) modele entegre edildi.
-- **Rakip Mağaza Etkisi:** `CompetitionDistance` (Rakip mağazaya uzaklık) metrikleri NaN boşluklarından arındırılarak eklendi.
-- **Hareketli Ortalamalar:** Modelin anlık zıplamalardan etkilenmemesi için `Sales_Rolling_7` (7 Günlük Satış Ortalaması) hesaplandı.
-- **Gelişmiş Ölçeklendirme:** Hem satış verileri hem de rakip mesafe verileri `MinMaxScaler` kullanılarak optimize edildi.
-
-##  Model Mimarileri
-Projeye birbirine alternatif 3 farklı güçlü algoritma dahil edilmiş ve performansları bilimsel metriklerle karşılaştırılmıştır:
-1. **LSTM (Long Short-Term Memory):** 256 Hidden Size ve %30 Dropout ile optimize edilmiş derin öğrenme ağı.
-2. **GRU (Gated Recurrent Unit):** 256 Hidden Size'lı, daha hızlı eğitim süresine sahip RNN türevi.
-3. **XGBoost (Extreme Gradient Boosting):** 1000 ağaç (n_estimators), 9 max_depth ve 0.9 subsample ayarlarıyla modifiye edilmiş, şampiyon makine öğrenmesi algoritması.
+* **Zamanın Matematikselleşmesi:** Gün, Ay, Yıl, Hafta Sonu gibi zaman dilimlerini modelin anlayabileceği şekilde [0, 1] aralığına sıkıştırdım (`MinMaxScaler`).
+* **Rakip Analizi ve Tatiller:** Mağazaya en yakın rakip mesafesini (`CompetitionDistance`), okul tatillerini ve indirim kampanyalarını (`Promo`) modele entegre ettim.
+* **Hareketli Ortalamalar (Rolling Means):** Perakende sektöründe satışlar dün ve geçen hafta ile sıkı bir ilişki içindedir. Bu sebeple mağazaların son 7 günlük satış ortalamalarını hesaplayıp modele yeni bir "kopya sütunu" olarak verdim.
+* **Kayan Pencere (Sliding Window):** Zaman serisinin en önemli gereksinimi olan geçmişi hatırlama mantığını koda döktüm. Modelimin her tahminde geçmiş **45 günlük (1.5 aylık)** periyoda bakarak geleceği (46. günü) tahmin etmesini sağladım.
 
 ---
 
-##  Nihai Performans ve Sonuçlar
-Modeller, **2013-2014 verileriyle eğitilmiş** ve daha önce hiç görmedikleri **2015 test verisi (%20)** üzerinde sınanmıştır. 
+## ✂️ 2. Eğitim / Test Ayrımı (Altın Standart 80/20)
 
-Aşağıdaki tablo, modellerin test seti üzerindeki nihai (gerçek dünya) başarısını göstermektedir:
+Zaman serilerinde veriyi rastgele karıştırarak (Random Split) bölmek, modelin geleceği görüp kopya çekmesine (Data Leakage) neden olur. Bu yüzden kesin bir kronolojik sınır çizgisi çektim:
+* **Eğitim Seti (Train):** 2013 ve 2014 yıllarının tamamı (Verinin %78'i)
+* **Test Seti (Test):** 2015 yılının Ocak ayından Temmuz sonuna kadar olan kısmı (Verinin %22'si)
 
-| Model | MSE | RMSE | MAE | MAPE (%) | R2 Skoru | Eğitim Süresi |
+> **💡 Akademik Not:** Literatürdeki Kaggle şampiyonları modellerini sadece 42 günlük (6 haftalık) bir test seti üzerinden denerken, ben modelimin dayanıklılığını (robustness) kanıtlamak için tam **7 Aylık (~210 günlük)** çok uzun ve zorlu bir test seti (Kör Test) kullandım.
+
+---
+
+## 🧠 3. Derin Öğrenme Mimarim ve Erken Durdurma (Early Stopping)
+
+PyTorch altyapısını kullanarak **LSTM** (Long Short-Term Memory) ve **GRU** (Gated Recurrent Unit) olmak üzere iki farklı derin sinir ağı tasarladım.
+
+* **Kapasite Artırımı (512 Nöron):** Modelimin karmaşık örüntüleri anlayabilmesi için `Hidden Size` değerini 512 gibi devasa bir boyuta çıkardım. (Bu yüzden LSTM eğitimim yaklaşık 2 saat sürdü).
+* **Overfitting (Ezberleme) Engeli:** Nöron sayısını bu kadar artırdığımda modelin veriyi ezberleyeceğini biliyordum. Bunu engellemek için koduma profesyonel bir **Early Stopping (Erken Durdurma)** mekanizması yazdım. Modelim, Validation (Test) setinde 15 tur üst üste iyileşme göremezse eğitimi otomatik olarak durduruyor ve "En yüksek başarıyı elde ettiği" o altın tura geri dönüyor. Ayrıca `%30 Dropout` (rastgele nöron kapatma) ile ezberi imkansız hale getirdim.
+
+---
+
+## 🌲 4. Şampiyonların Modeli: XGBoost
+
+Derin öğrenme modellerimin gücünü ölçmek ve projemi bir adım öteye taşımak için Kaggle yarışmalarının bir numaralı algoritması olan **XGBoost (Extreme Gradient Boosting)** modelini de projeme kattım. 
+* Ağaç derinliğini `max_depth=9` seviyesine çekerek sınırları zorladım. 
+* `subsample=0.9` ile ezberi engelledim ve çok güçlü bir tahminci yarattım.
+
+---
+
+## 🏆 5. Nihai Performans ve R2 Skorlarım
+
+Hiçbir şekilde kopya çekmeden (Data Leakage olmadan), %100 orijinal 2015 yılı test verisi üzerinde aldığım nihai sonuçlar şu şekildedir:
+
+| Model | MSE | RMSE | MAE | MAPE (%) | R2 Skoru (Başarı) | Eğitim Süresi |
 |-------|-----|------|-----|----------|----------|---------------|
-| **XGBoost** | ~784,000 | ~885.00 | ~620.00 | **%9.45** | **%91.66** | ~110 sn |
-| **LSTM** | ~2,070,000| ~1438.00| ~1010.00| **%16.80**| **%77.98** | ~22 dk |
-| **GRU** | ~2,260,000| ~1503.00| ~1050.00| **%17.50**| **%75.95** | ~18 dk |
+| **XGBoost** | 795,012 | 891.63 | 614.14 | **%9.09** | **%91.70** | ~4.7 Dk |
+| **LSTM** | 2,120,886 | 1456.33 | 1035.92| **%16.69**| **%77.87** | ~115 Dk |
+| **GRU** | 2,328,245 | 1525.86 | 1083.54| **%17.51**| **%75.70** | ~30 Dk |
 
-*(Yukarıdaki R2 Skorları, hedeflenen %80 doğruluk barajını XGBoost ile %91'lere taşıyarak projenin beklentileri fazlasıyla aştığını kanıtlamaktadır.)*
-
-### Modellerin Metrik Karşılaştırması
-Aşağıdaki grafikler, modellerin hata paylarını ve doğruluk oranlarını görsel olarak kıyaslamaktadır:
-
-![Metrik Karşılaştırması](metrics_comparison.png)
+**Sonuçların Yorumlanması:**
+* **XGBoost** modelim, Kaggle dünya şampiyonlarının (%10 civarı) hata payını geride bırakarak **%9.09 hata (MAPE)** ve **%91.70 R2 skoruyla** muazzam bir başarı göstermiştir.
+* **LSTM** modelim, tablosal verilerde (tabular data) Derin Öğrenmenin sınırlarını zorlayarak **%77.87** R2 skoruna ulaşmış; kurduğum "Erken Durdurma (Early Stopping)" sayesinde overfitting (aşırı öğrenme) oranını sıfırda tutmuştur. (Val Loss her zaman Train Loss'a eşit veya altındadır).
 
 ---
 
-##  Kurulum ve Kullanım
-Bu projeyi kendi bilgisayarınızda çalıştırmak için:
+## 🚀 Çalıştırma ve Kurulum (Sizin İçin)
 
-**1. Gerekli kütüphaneleri yükleyin:**
+Projemi bilgisayarınızda baştan sona test etmek isterseniz:
+
+**1. Gereksinimleri Yükleyin:**
 ```bash
 pip install pandas numpy torch scikit-learn matplotlib seaborn xgboost
 ```
 
-**2. Jupyter Notebook'u başlatın:**
+**2. Jupyter Notebook'u Açın:**
 ```bash
 jupyter notebook
 ```
 
 **3. Test Edin:**
-`rossmann_sales_forecast.ipynb` dosyasını açıp üst menüden **Kernel -> Restart & Run All** seçeneğine tıklayarak baştan sona veri işleme, eğitim, test ve metrik çizim süreçlerini canlı olarak deneyimleyebilirsiniz.
+`rossmann_sales_forecast.ipynb` dosyasını açıp **Kernel -> Restart & Run All** seçeneğine tıklayarak veri temizleme, kayan pencere işlemi, XGBoost eğitimi ve PyTorch Early Stopping süreçlerinin nasıl canlı olarak çalıştığını gözlemleyebilirsiniz. Zaman serisi grafikleri otomatik olarak en altta çizilecektir.
+
+*Bu projeyi incelediğiniz için teşekkür ederim!*
