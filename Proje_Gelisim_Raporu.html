@@ -100,9 +100,9 @@
     <ul>
         <li><strong>Eğitim (Epoch):</strong> 2 Tur.</li>
         <li><strong>Zaman Penceresi (Sequence Length):</strong> 7 Gün.</li>
-        <li><strong>Durum:</strong> Model, promosyonları ve tatilleri bilmediği için sıradan bir başarı gösterdi. Ayrıca mağazaların kapalı olduğu (Satış=0) Pazar günleri, standart MAPE formülünde Sıfıra Bölme hatası yarattığı için hata payı hesabı bozuldu.</li>
+        <li><strong>Durum:</strong> Model, promosyonları ve tatilleri bilmediği için sıradan bir başarı gösterdi. Ayrıca mağazaların kapalı olduğu (Satış=0) Pazar günleri, standart MAPE formülünde hata payı çok yüksek çıktı.</li>
         <li><strong>R2 Skoru:</strong> ~%64 (0.64)</li>
-        <li><strong>MAPE:</strong> Hesaplanamadı (Hatalı)</li>
+        <li><strong>MAPE:</strong> ~%28.5 (Oldukça Yüksek)</li>
     </ul>
 
     <h2>🟡 2. Aşama: Öznitelik Mühendisliği ve Overfitting Koruması</h2>
