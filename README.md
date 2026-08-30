@@ -5,7 +5,7 @@
 ![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white)
 ![Scikit-Learn](https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white)
 
-**Microsoft Staj Programı - 2. Aşama Projesi** kapsamında geliştirilmiş, derin öğrenme (Deep Learning) ve makine öğrenmesi (Machine Learning) tabanlı zaman serisi satış tahminleme projesidir.
+**Microsoft Staj Programı - 2. Aşama Projesi** kapsamında geliştirilmiş, derin öğrenme (PyTorch LSTM & GRU) ve gelişmiş makine öğrenmesi (XGBoost) algoritmalarını kullanan zaman serisi satış tahminleme projesidir.
 
 ---
 
